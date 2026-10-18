@@ -1,0 +1,41 @@
+name: Relay SEO check
+description: Compare a pull request's preview deployment with production before merge, ranked by real Search Console traffic.
+author: Playbook Media
+branding:
+  icon: search
+  color: blue
+inputs:
+  token:
+    description: The project's Relay CI token. Store it as the RELAY_CI_TOKEN secret.
+    required: true
+  preview-url:
+    description: The URL of the deployed preview, for example the output of your deploy step.
+    required: true
+  fail-on:
+    description: "When the job fails: blocking (default), warning, or never."
+    required: false
+    default: blocking
+  relay-url:
+    description: The Relay origin.
+    required: false
+    default: https://relay.playbookmedia.io
+  timeout-minutes:
+    description: How long to wait for the check.
+    required: false
+    default: "10"
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        RELAY_TOKEN: ${{ inputs.token }}
+        PREVIEW_URL: ${{ inputs.preview-url }}
+        FAIL_ON: ${{ inputs.fail-on }}
+        RELAY_URL: ${{ inputs.relay-url }}
+        TIMEOUT_MINUTES: ${{ inputs.timeout-minutes }}
+        REPOSITORY: ${{ github.repository }}
+        HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        BASE_REF: ${{ github.event.pull_request.base.ref }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        OVERRIDE: ${{ contains(github.event.pull_request.labels.*.name, 'relay-seo-override') }}
+      run: "$GITHUB_ACTION_PATH/check.sh"
