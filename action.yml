@@ -23,6 +23,10 @@ inputs:
     description: How long to wait for the check.
     required: false
     default: "10"
+  config-path:
+    description: The release gate settings file. Relay validates it and fails the job when it is invalid.
+    required: false
+    default: relay-gate.json
 runs:
   using: composite
   steps:
@@ -33,6 +37,7 @@ runs:
         FAIL_ON: ${{ inputs.fail-on }}
         RELAY_URL: ${{ inputs.relay-url }}
         TIMEOUT_MINUTES: ${{ inputs.timeout-minutes }}
+        CONFIG_PATH: ${{ inputs.config-path }}
         REPOSITORY: ${{ github.repository }}
         HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         BASE_REF: ${{ github.event.pull_request.base.ref }}

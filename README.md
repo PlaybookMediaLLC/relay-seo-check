@@ -23,7 +23,7 @@ jobs:
         with:
           fetch-depth: 0
       # ... deploy the preview, with an output named url ...
-      - uses: PlaybookMediaLLC/relay-seo-check@v1
+      - uses: PlaybookMediaLLC/relay-seo-check@v2
         with:
           token: ${{ secrets.RELAY_CI_TOKEN }}
           preview-url: ${{ steps.deploy.outputs.url }}
@@ -41,21 +41,37 @@ jobs:
 | `fail-on`         | No       | `blocking`                       | `blocking`, `warning` or `never`.                        |
 | `relay-url`       | No       | `https://relay.playbookmedia.io` | The Relay origin.                                        |
 | `timeout-minutes` | No       | `10`                             | How long to wait for the check.                          |
+| `config-path`     | No       | `relay-gate.json`                | The release gate settings file in the repository.        |
+
+## Release gate settings
+
+From v2, the action sends `relay-gate.json` from your repository when it exists. The file turns rule packs on or off (`seo`, `accessibility`, `links`, `securityHeaders`), sets budgets and lists ignore rules:
+
+```json
+{
+  "packs": { "links": true, "securityHeaders": true },
+  "ignore": [{ "rule": "color-contrast", "path": "^/legacy/" }]
+}
+```
+
+If the file is not valid, the job fails with the exact reason. Full reference: <https://relay.playbookmedia.io/docs/release-gate>
 
 ## Behavior
 
-- The job summary lists each finding with its page, rule, before and after values, clicks and impressions, the highest-traffic page first.
+- The job summary groups the findings by rule pack, lists the ignore rules from `relay-gate.json`, and shows the blocking findings of the last 10 runs. A details table lists each finding with its pack, page, rule, before and after values, clicks and impressions, the highest-traffic page first.
 - The label `relay-seo-override` on the pull request lets blocking findings pass. Relay records the override in the project's Activity log.
 - If Relay cannot finish the check, or the project used its checks for the month, the action prints the reason and passes, unless `fail-on` is `warning`.
 - The action needs no repository write permission. It uses only `curl` and `jq`, which GitHub's runners include.
 
 ## Pinning
 
-For a fixed version, pin the action to a release commit instead of `@v1`:
+For a fixed version, pin the action to a release commit instead of `@v2`:
 
 ```yaml
-- uses: PlaybookMediaLLC/relay-seo-check@<commit-sha> # v1.0.0
+- uses: PlaybookMediaLLC/relay-seo-check@<commit-sha> # v2.0.0
 ```
+
+`@v1` keeps the v1 behavior: it does not send `relay-gate.json`.
 
 ## Preview hosts
 
